@@ -1,0 +1,19 @@
+# Environment files
+.env
+.env.local
+
+# Supabase configuration
+supabase/config.toml
+
+# Node modules
+node_modules/
+
+# Build directories
+dist/
+build/
+
+# Log files
+*.log
+
+# Local storage
+supabase/.temp
