@@ -1,30 +1,42 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { Slot, useRouter, useSegments } from 'expo-router';
+import { useEffect } from 'react';
+import { AuthProvider, useAuth } from '../provider/AuthProvider';
 import "../global.css"
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+// Define a type for the segments
+type Segment = '(tabs)' | 'community' | '_sitemap' | 'explore' | '+not-found' | '(auth)';
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+// Makes sure the user is authenticated before accessing protected pages
+const InitialLayout = () => {
+  const { session, initialized } = useAuth();
+  const segments = useSegments() as Segment[];
+  const router = useRouter();
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  useEffect(() => {
+    if (!initialized) return;
 
+    // Check if the path/url is in the (auth) group
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (session && !inAuthGroup) {
+      // Redirect authenticated users to the list page
+      router.replace('/list' as any);
+    } else if (!session && !inAuthGroup) {
+      // Redirect unauthenticated users to the login page
+      router.replace('/' as any);
+    }
+  }, [session, initialized, segments]);
+
+  return <Slot />;
+};
+
+// Wrap the app with the AuthProvider
+const RootLayout = () => {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AuthProvider>
+      <InitialLayout />
+    </AuthProvider>
   );
-}
+};
+
+export default RootLayout;
