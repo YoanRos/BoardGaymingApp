@@ -1,37 +1,67 @@
-import { Text ,FlatList, View} from "react-native";
+import { Text, FlatList, View, SafeAreaView, TextInput } from "react-native";
 import { supabase } from "@/utils/supabase";
 import FloatingCTA from "@/components/ui/floatingCTA";
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState } from "react";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useState, useEffect } from "react";
 import CreationModal from "@/components/CreationModal";
 
-
+interface Channel {
+  id: string;
+  name: string;
+}
 export default function CommunityScreen() {
-  console.log("here")
-  const [showModal, setShowModal] = useState(false)
-  const handlePress =() =>{
-    console.log(showModal)
-  setShowModal(true)
-  }
-  const onValidation =()=> {
-    console.log("tchou")
-    setShowModal(false)
-  }
+  const [showModal, setShowModal] = useState(false);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const handlePress = () => {
+    setShowModal(true);
+  };
 
-  const icon =
-    <Ionicons name="create" size={24} color="white" />
-  
+  const fetchData = async () => {
+    const { data, error } = await supabase.from("channels").select();
+    if (error) {
+      console.error("Error fetching data:", error);
+      return;
+    }
+    setChannels(data as Channel[]);
+  };
+  useEffect(() => {
+    fetchData();
+  }, []);
+  const onValidation = async (name: String): Promise<void> => {
+    console.log("tchou");
+    setShowModal(false);
+    if (name) {
+      const { error } = await supabase.from("channels").insert({ name: name });
+      console.log(error);
+    }
+  };
+
+  const icon = <Ionicons name="create" size={24} color="white" />;
+
   return (
-    <View className="relative h-full">
-
-        <CreationModal visible={showModal} title={"Create a new Channel"} onValidation={onValidation} />
-    
-    <FlatList
-      data={[{ key: 'Channel1  ' }, { key: 'Channel2  ' }, { key: 'Channel3  ' }]}
-      renderItem={({ item }) => <Text>{item.key}</Text>}
-      keyExtractor={item => item.key}
+    <SafeAreaView className="flex-1 relative">
+      <CreationModal
+        visible={showModal}
+        title={"Create a new Channel"}
+        onValidation={onValidation}
       />
-    <FloatingCTA icon={icon} onPress={handlePress}/>
+
+      <View className="flex p-4 gap-3">
+        <TextInput
+          className="p-3 border rounded-lg border-gray-400"
+          placeholder="Jump to..."
+        ></TextInput>
+        <Text className="text-gray-400">Channels</Text>
+        <FlatList
+          className="flex"
+          data={channels}
+          renderItem={({ item }) => (
+            <Text className="font-semibold m-2"># {item.name}</Text>
+          )}
+          keyExtractor={(item) => item.id}
+        />
       </View>
+      <FloatingCTA icon={icon} onPress={handlePress} />
+    </SafeAreaView>
   );
 }
