@@ -4,6 +4,7 @@ import FloatingCTA from "@/components/ui/floatingCTA";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState, useEffect } from "react";
 import CreationModal from "@/components/CreationModal";
+import { Link } from "expo-router";
 
 interface Channel {
   id: string;
@@ -56,7 +57,15 @@ export default function CommunityScreen() {
           className="flex"
           data={channels}
           renderItem={({ item }) => (
-            <Text className="font-semibold m-2"># {item.name}</Text>
+            <Link
+              className="m-2"
+              href={{
+                pathname: "/(channels)/channelMain",
+                params: { id: item.id, channelName: item.name },
+              }}
+            >
+              <Text className="font-semibold"># {item.name}</Text>
+            </Link>
           )}
           keyExtractor={(item) => item.id}
         />
